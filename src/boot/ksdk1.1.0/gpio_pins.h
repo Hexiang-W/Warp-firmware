@@ -106,9 +106,18 @@ enum _gpio_pins
 		kWarpPinTPS62740_VSEL3			= GPIO_MAKE_PIN(HW_GPIOB, 7),
 		kWarpPinTPS62740_VSEL2			= GPIO_MAKE_PIN(HW_GPIOB, 10),
 		kWarpPinTPS62740_VSEL1			= GPIO_MAKE_PIN(HW_GPIOB, 11),
-		kWarpPinCLKOUT32K			= GPIO_MAKE_PIN(HW_GPIOB, 13),
+		kWarpPinCLKOUT32K				= GPIO_MAKE_PIN(HW_GPIOB, 13),
 	#endif
+
+	kSSD1331PinMOSI		= GPIO_MAKE_PIN(HW_GPIOA, 8),
+	kSSD1331PinSCK		= GPIO_MAKE_PIN(HW_GPIOA, 9),
+	kSSD1331PinCSn		= GPIO_MAKE_PIN(HW_GPIOB, 13),
+	kSSD1331PinDC		= GPIO_MAKE_PIN(HW_GPIOA, 12),
+	kSSD1331PinRST		= GPIO_MAKE_PIN(HW_GPIOB, 0),
+
+
 };
+
 
 extern gpio_input_pin_user_config_t	inputPins[];
 extern gpio_output_pin_user_config_t	outputPins[];

@@ -53,7 +53,31 @@ gpio_output_pin_user_config_t	outputPins[] = {
 		},
 		*/
 		{
-			.pinName = kWarpPinADXL362_SPI_nCS,
+			.pinName = kSSD1331PinMOSI,
+			.config.outputLogic = 1,
+			.config.slewRate = kPortSlowSlewRate,
+			.config.driveStrength = kPortLowDriveStrength,
+		},
+		{
+			.pinName = kSSD1331PinSCK,
+			.config.outputLogic = 1,
+			.config.slewRate = kPortSlowSlewRate,
+			.config.driveStrength = kPortLowDriveStrength,
+		},
+		{
+			.pinName = kSSD1331PinCSn,
+			.config.outputLogic = 1,
+			.config.slewRate = kPortSlowSlewRate,
+			.config.driveStrength = kPortLowDriveStrength,
+		},
+		{
+			.pinName = kSSD1331PinDC,
+			.config.outputLogic = 1,
+			.config.slewRate = kPortSlowSlewRate,
+			.config.driveStrength = kPortLowDriveStrength,
+		},
+		{
+			.pinName = kSSD1331PinRST,
 			.config.outputLogic = 1,
 			.config.slewRate = kPortSlowSlewRate,
 			.config.driveStrength = kPortLowDriveStrength,
