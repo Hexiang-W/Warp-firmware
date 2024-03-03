@@ -86,7 +86,8 @@
 #include "devCCS811.h"
 #include "devHDC1000.h"
 #include "devRV8803C7.h"
-#include "devSSD1331.h"
+#include "devSSD1331.h" //cw2
+#include "devINA219.h" //cw3
 
 
 #if (WARP_BUILD_ENABLE_DEVADXL362)
@@ -188,7 +189,11 @@
 #endif
 
 #if (WARP_BUILD_ENABLE_DEVSSD1331)
-	volatile WarpSPIDeviceState			deviceSSD1331State;
+	volatile WarpSPIDeviceState			deviceSSD1331State; //cw2
+#endif
+
+#if (WARP_BUILD_ENABLE_DEVINA219)
+	volatile WarpSPIDeviceState			deviceINA219State; //cw3
 #endif
 
 typedef enum
@@ -1455,7 +1460,7 @@ warpWaitKey(void)
 
 	return rttKey;
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int
 main(void)
 {
@@ -1736,6 +1741,10 @@ main(void)
 		initAS7263(	0x49	/* i2cAddress */,	kWarpDefaultSupplyVoltageMillivoltsAS7263	);
 #endif
 
+#if (WARP_BUILD_ENABLE_DEVINA219)
+		initINA219(	0x40	/* i2cAddress */,	kWarpDefaultSupplyVoltageMillivoltsINA219	); //set it to 0x40 (cw3)
+#endif
+
 #if (WARP_BUILD_ENABLE_DEVRV8803C7)
 		initRV8803C7(	0x32	/* i2cAddress */,					kWarpDefaultSupplyVoltageMillivoltsRV8803C7	);
 		status = setRTCCountdownRV8803C7(0 /* countdown */, kWarpRV8803ExtTD_1HZ /* frequency */, false /* interupt_enable */);
@@ -1919,15 +1928,41 @@ main(void)
 	 *	will also be sent to the BLE if that is compiled in.
 	 */
 	gWarpBooted = true;
-	warpPrint("Boot done.\n");
+	warpPrint("Boot done.\n"); 
 
-#if (!WARP_BUILD_ENABLE_GLAUX_VARIANT && WARP_BUILD_BOOT_TO_CSVSTREAM)
+#if (!WARP_BUILD_ENABLE_GLAUX_VARIANT && WARP_BUILD_BOOT_TO_CSVSTREAM) ////////////////////////////////////////////////////////////////////////////////////////////////////
 	int timer  = 0;
 	int rttKey = -1;
 
 	bool _originalWarpExtraQuietMode = gWarpExtraQuietMode;
 	gWarpExtraQuietMode = false;
-	warpPrint("Press any key to show menu...\n");
+
+
+
+	warpPrint("xxxxxx-----test meassage------xxxxxx\n"); //test
+	warpPrint("xxxxxx-----init------xxxxxx\n");
+    devSSD1331init();
+    // warpEnableI2Cpins();
+    warpPrint("xxxxxx-----init done------xxxxxx\n");
+    
+    OSA_TimeDelay(100); // time for current to stabilise
+
+ 	warpPrint("\ncurrent (uA), bus (mV), shunt (uV), power (uW), time (ms)\n");
+ 	// printSensorDataINA219(1);
+ 	
+ 	for (int i = 0; i < 1000; i++)
+   	{
+        int32_t bus_mV 			= getBusVoltage_mV_INA219();
+        int32_t shunt_uV 		= getShuntVoltage_uV_INA219();
+        int32_t current_uA 		= getCurrent_uA_INA219();
+        int32_t power_uW 		= getPower_uW_INA219();
+        uint32_t time 			= OSA_TimeGetMsec();
+        warpPrint("%d, %d, %d, %d, %d\n", current_uA, bus_mV, shunt_uV, power_uW, time);
+    }
+	
+
+
+	warpPrint("\nPress any key to show menu...\n");
 	gWarpExtraQuietMode = _originalWarpExtraQuietMode;
 
 	while (rttKey < 0 && timer < kWarpCsvstreamMenuWaitTimeMilliSeconds)
@@ -2189,6 +2224,12 @@ main(void)
 					warpPrint("\r\t- 'k' AS7263			(0x00--0x2B): 2.7V -- 3.6V (compiled out) \n");
 #endif
 
+#if (WARP_BUILD_ENABLE_DEVINA219)
+					warpPrint("\r\t- 'l' INA219			(0x00--0x05): 2.7V -- 3.6V\n");
+#else
+					warpPrint("\r\t- 'l' INA219			(0x00--0x05): 2.7V -- 3.6V (compiled out) \n");
+#endif
+
 				warpPrint("\r\tEnter selection> ");
 				key = warpWaitKey();
 
@@ -2338,6 +2379,16 @@ main(void)
 						break;
 					}
 #endif
+					
+#if (WARP_BUILD_ENABLE_DEVINA219)
+					case 'l':
+					{
+						menuTargetSensor = kWarpSensorINA219;
+						menuI2cDevice = &deviceINA219State;
+						break;
+					}
+#endif
+
 					default:
 					{
 						warpPrint("\r\tInvalid selection '%c' !\n", key);
@@ -3590,6 +3641,10 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag,
 		warpPrint(" HDC1000 Temp, HDC1000 Hum,");
 #endif
 
+#if (WARP_BUILD_ENABLE_DEVINA219)
+		warpPrint(" INA219 Shunt, INA219 Bus, INA219 Power, INA219 Current"); //cw3
+#endif
+
 #if (WARP_CSVSTREAM_FLASH_PRINT_METADATA)
 		warpPrint(" RTC->TSR, RTC->TPR,");
 #endif
@@ -3640,6 +3695,10 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag,
 
 #if (WARP_BUILD_ENABLE_DEVHDC1000)
 		printSensorDataHDC1000(hexModeFlag);
+#endif
+
+#if (WARP_BUILD_ENABLE_DEVINA219)
+		printSensorDataINA219(hexModeFlag); //cw3
 #endif
 
 #if (WARP_CSVSTREAM_FLASH_PRINT_METADATA)
@@ -3694,16 +3753,17 @@ loopForSensor(	const char *  tagString,
 {
 	WarpStatus		status;
 	uint8_t			address = min(minAddress, baseAddress);
-	int			readCount = repetitionsPerAddress + 1;
-	int			nSuccesses = 0;
-	int			nFailures = 0;
-	int			nCorrects = 0;
-	int			nBadCommands = 0;
+	int				readCount = repetitionsPerAddress + 1;
+	int				nSuccesses = 0;
+	int				nFailures = 0;
+	int				nCorrects = 0;
+	int				nBadCommands = 0;
 	uint16_t		actualSssupplyMillivolts = sssupplyMillivolts;
 
+	int numberOfBytes = (!strcmp(tagString, "\r\nINA219:\n\r")) ? 2 : 1; //read 2 bytes from INA219
 
 	if (	(!spiDeviceState && !i2cDeviceState) ||
-		(spiDeviceState && i2cDeviceState) )
+			(spiDeviceState && i2cDeviceState) )
 	{
 		warpPrint(RTT_CTRL_RESET RTT_CTRL_BG_BRIGHT_YELLOW RTT_CTRL_TEXT_BRIGHT_WHITE kWarpConstantStringErrorSanity RTT_CTRL_RESET "\n");
 	}
@@ -3719,7 +3779,7 @@ loopForSensor(	const char *  tagString,
 	{
 		for (int i = 0; i < readCount; i++) for (int j = 0; j < chunkReadsPerAddress; j++)
 			{
-			status = readSensorRegisterFunction(address+j, 1 /* numberOfBytes */);
+			status = readSensorRegisterFunction(address+j, numberOfBytes /* numberOfBytes */);
 				if (status == kWarpStatusOK)
 				{
 					nSuccesses++;
@@ -3754,10 +3814,20 @@ loopForSensor(	const char *  tagString,
 
 						if (chatty)
 						{
-						warpPrint("\r\t0x%02x --> 0x%02x\n",
-							address+j,
-									  i2cDeviceState->i2cBuffer[0]);
-						}
+							if (numberOfBytes == 1)
+							{
+                                warpPrint("\r\t0x%02x --> 0x%02x\n",
+                                            address+j,
+                                            i2cDeviceState->i2cBuffer[0]);
+                            }
+                            else 
+                            {
+                                warpPrint("\r\t0x%02x --> 0x%02x%02x\n",
+                                            address+j,
+                                            i2cDeviceState->i2cBuffer[0],
+                                            i2cDeviceState->i2cBuffer[1]);
+                            }
+                        }
 					}
 				}
 				else if (status == kWarpStatusDeviceCommunicationFailed)
@@ -3870,6 +3940,33 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 			);
 #else
 			warpPrint("\r\n\tMMA8451Q Read Aborted. Device Disabled :(");
+#endif
+
+			break;
+		}
+
+		case kWarpSensorINA219: //cw3
+		{
+
+#if (WARP_BUILD_ENABLE_DEVINA219)
+				loopForSensor(	"\r\nINA219:\n\r",				/*	tagString						*/
+								&readSensorRegisterINA219,		/*	readSensorRegisterFunction		*/
+								&deviceINA219State,				/*	i2cDeviceState					*/
+								NULL,							/*	spiDeviceState					*/
+								baseAddress,					/*	baseAddress						*/
+								0x00,							/*	minAddress						*/
+								0x05,							/*	maxAddress						*/
+								repetitionsPerAddress,			/*	repetitionsPerAddress			*/
+								chunkReadsPerAddress,			/*	chunkReadsPerAddress			*/
+								spinDelay,						/*	spinDelay						*/
+								autoIncrement,					/*	autoIncrement					*/
+								sssupplyMillivolts,				/*	sssupplyMillivolts				*/
+								referenceByte,					/*	referenceByte					*/
+								adaptiveSssupplyMaxMillivolts,	/*	adaptiveSssupplyMaxMillivolts	*/
+								chatty							/*	chatty							*/
+			);
+#else
+			warpPrint("\r\n\tINA219 Read Aborted. Device Disabled :(");
 #endif
 
 			break;

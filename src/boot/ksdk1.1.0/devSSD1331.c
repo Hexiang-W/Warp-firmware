@@ -163,13 +163,25 @@ devSSD1331init(void)
 	 *	of green.
 	 */
 
+writeCommand(kSSD1331CommandCONTRASTA); // 0x81
+writeCommand(0xFF);
+writeCommand(kSSD1331CommandCONTRASTB); // 0x82
+writeCommand(0xFF);
+writeCommand(kSSD1331CommandCONTRASTC); // 0x83
+writeCommand(0xFF);
+
+// set current for max contrast
+writeCommand(kSSD1331CommandMASTERCURRENT); // 0x87
+writeCommand(0x0F);
+
+
 	writeCommand(0x22);
 	writeCommand(0x00); // Starting column coordinates
 	writeCommand(0x00); // Starting row coordinates
 	writeCommand(0x5F); // Finishing column coordinates (for 96 pixels wide display)
 	writeCommand(0x3F); // Finishing row coordinates (for 64 pixels high display)
 
-	// Outline color set to the brightest green (0d for red, 63d for green, 0d for blue)
+	// // Outline color set to the brightest green (0d for red, 63d for green, 0d for blue)
 	writeCommand(0x00); // Red component of the outline color
 	writeCommand(0xFF); // Green component of the outline color (brightest green)
 	writeCommand(0x00); // Blue component of the outline color
@@ -178,6 +190,7 @@ devSSD1331init(void)
 	writeCommand(0x00); // Red component of the fill color
 	writeCommand(0xFF); // Green component of the fill color (brightest green)
 	writeCommand(0x00); // Blue component of the fill color
+
 
 
 //	SEGGER_RTT_WriteString(0, "\r\n\tDone with draw rectangle...\n");
