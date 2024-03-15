@@ -1938,27 +1938,45 @@ main(void)
 	gWarpExtraQuietMode = false;
 
 
-
-	warpPrint("xxxxxx-----test meassage------xxxxxx\n"); //test
-	warpPrint("xxxxxx-----init------xxxxxx\n");
-    devSSD1331init();
-    // warpEnableI2Cpins();
-    warpPrint("xxxxxx-----init done------xxxxxx\n");
+	// // cw 3 codes
+	// warpPrint("xxxxxx-----test meassage------xxxxxx\n"); //test
+	// warpPrint("xxxxxx-----init------xxxxxx\n");
+    // devSSD1331init();
+    // // warpEnableI2Cpins();
+    // warpPrint("xxxxxx-----init done------xxxxxx\n");
     
-    OSA_TimeDelay(100); // time for current to stabilise
+    // OSA_TimeDelay(100); // time for current to stabilise
 
- 	warpPrint("\ncurrent (uA), bus (mV), shunt (uV), power (uW), time (ms)\n");
- 	// printSensorDataINA219(1);
+ 	// warpPrint("\ncurrent (uA), bus (mV), shunt (uV), power (uW), time (ms)\n");
+ 	// // printSensorDataINA219(1);
  	
- 	for (int i = 0; i < 1000; i++)
-   	{
-        int32_t bus_mV 			= getBusVoltage_mV_INA219();
-        int32_t shunt_uV 		= getShuntVoltage_uV_INA219();
-        int32_t current_uA 		= getCurrent_uA_INA219();
-        int32_t power_uW 		= getPower_uW_INA219();
-        uint32_t time 			= OSA_TimeGetMsec();
-        warpPrint("%d, %d, %d, %d, %d\n", current_uA, bus_mV, shunt_uV, power_uW, time);
-    }
+ 	// for (int i = 0; i < 1000; i++)
+   	// {
+    //     int32_t bus_mV 			= getBusVoltage_mV_INA219();
+    //     int32_t shunt_uV 		= getShuntVoltage_uV_INA219();
+    //     int32_t current_uA 		= getCurrent_uA_INA219();
+    //     int32_t power_uW 		= getPower_uW_INA219();
+    //     uint32_t time 			= OSA_TimeGetMsec();
+    //     warpPrint("%d, %d, %d, %d, %d\n", current_uA, bus_mV, shunt_uV, power_uW, time);
+    // }
+
+	// cw 4 test
+	// warpPrint("xxxxxx-----test meassage------xxxxxx\n"); //test
+    
+    // OSA_TimeDelay(100); // time for reading to stabilise
+
+ 	// warpPrint("\nx_acceleration, y_acceleration, z_acceleration, time (ms)\n");
+ 	
+ 	// for (int i = 0; i < 1000; i++)
+   	// {
+    //     int32_t x_acceleration 	= getX_raw_MMA8451Q();
+    //     int32_t y_acceleration 	= getY_raw_MMA8451Q();
+    //    	int32_t z_acceleration 	= getZ_raw_MMA8451Q();
+
+    //     uint32_t time 			= OSA_TimeGetMsec();
+
+    //     warpPrint("%d, %d, %d, %d\n", x_acceleration, y_acceleration, z_acceleration, time);
+    // }
 	
 
 
@@ -2097,6 +2115,7 @@ main(void)
 		warpPrint("\r- 's': power up all sensors.\n");
 		warpPrint("\r- 't': dump processor state.\n");
 		warpPrint("\r- 'u': set I2C address.\n");
+		warpPrint("\r- 'y': read from MMA8451Q.\n"); // cw4
 
 #if (WARP_BUILD_ENABLE_DEVAT45DB)
 		warpPrint("\r- 'R': read bytes from Flash.\n");
@@ -2734,6 +2753,33 @@ main(void)
 				}
 
 				break;
+			}
+
+			case 'y':
+			{
+				// cw4
+				OSA_TimeDelay(100); 
+				warpPrint("\r\n\thexModeFlag? ['0' | '1']> ");
+
+				bool hexModeFlag = warpWaitKey() - '0';
+				if (hexModeFlag == 0)
+				{
+					// read 100 times to obtain accelerometer data
+					for (int i=0; i<100; i++)
+					{
+						OSA_TimeDelay(50);
+						printSensorDataMMA8451Q(hexModeFlag);
+						warpPrint(" \n");
+					}
+				}
+				
+				else
+				{	
+					// classification 
+					orientation();
+					// warpPrint("xxxxxx-----test meassage------xxxxxx\n");
+				}
+
 			}
 #if (WARP_BUILD_ENABLE_DEVRV8803C7)
 			case 'v':

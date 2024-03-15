@@ -63,15 +63,18 @@ extern volatile uint32_t		gWarpI2cTimeoutMilliseconds;
 extern volatile uint32_t		gWarpSupplySettlingDelayMilliseconds;
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void
 initMMA8451Q(const uint8_t i2cAddress, uint16_t operatingVoltageMillivolts)
 {
-	deviceMMA8451QState.i2cAddress			= i2cAddress;
+	deviceMMA8451QState.i2cAddress					= i2cAddress;
 	deviceMMA8451QState.operatingVoltageMillivolts	= operatingVoltageMillivolts;
-
+	set_0x2a();
 	return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 WarpStatus
 writeSensorRegisterMMA8451Q(uint8_t deviceRegister, uint8_t payload)
@@ -127,6 +130,8 @@ writeSensorRegisterMMA8451Q(uint8_t deviceRegister, uint8_t payload)
 	return kWarpStatusOK;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 WarpStatus
 configureSensorMMA8451Q(uint8_t payloadF_SETUP, uint8_t payloadCTRL_REG1)
 {
@@ -145,6 +150,8 @@ configureSensorMMA8451Q(uint8_t payloadF_SETUP, uint8_t payloadCTRL_REG1)
 
 	return (i2cWriteStatus1 | i2cWriteStatus2);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 WarpStatus
 readSensorRegisterMMA8451Q(uint8_t deviceRegister, int numberOfBytes)
@@ -204,6 +211,8 @@ readSensorRegisterMMA8451Q(uint8_t deviceRegister, int numberOfBytes)
 
 	return kWarpStatusOK;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void
 printSensorDataMMA8451Q(bool hexModeFlag)
@@ -306,6 +315,8 @@ printSensorDataMMA8451Q(bool hexModeFlag)
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t
 appendSensorDataMMA8451Q(uint8_t* buf)
@@ -420,4 +431,113 @@ appendSensorDataMMA8451Q(uint8_t* buf)
 		index += 1;
 	}
 	return index;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int16_t getX_raw_MMA8451Q()
+{
+    uint16_t value;
+
+    readSensorRegisterMMA8451Q(kWarpSensorOutputRegisterMMA8451QOUT_X_MSB, 2);
+    value = ((uint16_t)deviceMMA8451QState.i2cBuffer[0] << 6) + (deviceMMA8451QState.i2cBuffer[1] >> 2);
+
+    return value;
+}
+
+
+int16_t getY_raw_MMA8451Q()
+{
+    uint16_t value;
+    readSensorRegisterMMA8451Q(kWarpSensorOutputRegisterMMA8451QOUT_Y_MSB, 2 /* numberOfBytes */);
+    value = ((uint16_t)deviceMMA8451QState.i2cBuffer[0] << 6) + (deviceMMA8451QState.i2cBuffer[1] >> 2);
+
+    return value;
+}
+
+
+int16_t getZ_raw_MMA8451Q()
+{
+    uint16_t value;
+    readSensorRegisterMMA8451Q(kWarpSensorOutputRegisterMMA8451QOUT_Z_MSB, 2 /* numberOfBytes */);
+    value = ((uint16_t)deviceMMA8451QState.i2cBuffer[0] << 6) + (deviceMMA8451QState.i2cBuffer[1] >> 2);
+
+    return value;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*enable accelerometer reading*/
+void set_0x2a()
+{
+	uint8_t bit = 0x05;
+
+	// high-resolution modes -- set Bit 2 to 1
+	// set the LSB to 1 to set to active mode
+
+	writeSensorRegisterMMA8451Q(kWarpSensorConfigurationRegisterMMA8451QCTRL_REG1, bit); 
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void orientation()
+{
+	uint16_t readSensorRegisterValueLSB;
+	uint16_t readSensorRegisterValueMSB;
+	int16_t  readSensorRegisterValueCombined;
+	int32_t  sum_y = 0;
+	int32_t  sum_z = 0;
+	WarpStatus i2cReadStatus;
+
+	warpPrint("-----pls wait-----\n");
+
+	for (int i=0; i<100; i++)
+		{
+			//delay for 50ms
+			OSA_TimeDelay(50);
+			i2cReadStatus                   = readSensorRegisterMMA8451Q(kWarpSensorOutputRegisterMMA8451QOUT_Y_MSB, 2 /* numberOfBytes */);
+			readSensorRegisterValueMSB      = deviceMMA8451QState.i2cBuffer[0];
+			readSensorRegisterValueLSB      = deviceMMA8451QState.i2cBuffer[1];
+			readSensorRegisterValueCombined = ((readSensorRegisterValueMSB & 0xFF) << 6) | (readSensorRegisterValueLSB >> 2);
+			
+			// every reading in 14 bits 2's complement
+			readSensorRegisterValueCombined = (readSensorRegisterValueCombined ^ (1 << 13)) - (1 << 13);
+			sum_y += readSensorRegisterValueCombined;
+
+
+			//delay for 50ms
+			OSA_TimeDelay(50);
+			i2cReadStatus                   = readSensorRegisterMMA8451Q(kWarpSensorOutputRegisterMMA8451QOUT_Z_MSB, 2 /* numberOfBytes */);
+			readSensorRegisterValueMSB      = deviceMMA8451QState.i2cBuffer[0];
+			readSensorRegisterValueLSB      = deviceMMA8451QState.i2cBuffer[1];
+			readSensorRegisterValueCombined = ((readSensorRegisterValueMSB & 0xFF) << 6) | (readSensorRegisterValueLSB >> 2);
+			
+			// every reading in 14 bits 2's complement
+			readSensorRegisterValueCombined = (readSensorRegisterValueCombined ^ (1 << 13)) - (1 << 13);
+			sum_z += readSensorRegisterValueCombined;	
+		}
+	// // calculate mean of collect data
+	// float mean_y = sum_y / 100.0; // slightly problematic, so use sum instead.
+	// float mean_z = sum_z / 100.0;
+
+	warpPrint("-----\n");
+	warpPrint("sum_y = %d \n", sum_y);
+	warpPrint("sum_z = %d \n", sum_z);
+	warpPrint("-----\n");
+	// warpPrint("mean_y = %d \n", mean_y); // slightly problematic, so use sum instead.
+	// warpPrint("mean_z = %d \n", mean_z);
+	
+
+	// set threshold value
+	if (sum_z >= 200000)
+	{
+		warpPrint("-----\n");
+		warpPrint("The board is 0 degree flat");
+	}
+	
+	if (sum_y >= 200000)
+	{
+		warpPrint("-----\n");
+		warpPrint("The board is 90 degree upright");
+	}
 }

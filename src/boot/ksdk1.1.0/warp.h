@@ -113,12 +113,12 @@ typedef enum
 typedef enum
 {
 	kWarpSensorConfigurationRegisterMMA8451QF_SETUP			= 0x09,
-	kWarpSensorConfigurationRegisterMMA8451QCTRL_REG1		= 0x2A,
+	kWarpSensorConfigurationRegisterMMA8451QCTRL_REG1		= 0x2A, // cw4
 
-	kWarpSensorConfigurationRegisterMAG3110CTRL_REG1		= 0x10,
-	kWarpSensorConfigurationRegisterMAG3110CTRL_REG2		= 0x11,
+	kWarpSensorConfigurationRegisterMAG3110CTRL_REG1			= 0x10,
+	kWarpSensorConfigurationRegisterMAG3110CTRL_REG2			= 0x11,
 
-	kWarpSensorConfigurationRegisterHDC1000Configuration	= 0x02,
+	kWarpSensorConfigurationRegisterHDC1000Configuration		= 0x02,
 
 	kWarpSensorConfigurationRegisterAMG8834PCTL			= 0x00,
 	kWarpSensorConfigurationRegisterAMG8834RST			= 0x01,
@@ -169,7 +169,7 @@ typedef enum
 	kWarpSensorConfigurationRegisterISL23415WRwriteInstruction	= 0xC0,
 
 	kWarpSensorConfigurationRegisterADXL362DEVID_AD			= 0x00,
-	kWarpSensorConfigurationRegisterADXL362DEVID_MST		= 0x01,
+	kWarpSensorConfigurationRegisterADXL362DEVID_MST			= 0x01,
 	kWarpSensorConfigurationRegisterADXL362RESET			= 0x1F,
 } WarpSensorConfigurationRegister;
 
@@ -182,16 +182,16 @@ typedef enum
 	kWarpSensorOutputRegisterMMA8451QOUT_Z_MSB			= 0x05,
 	kWarpSensorOutputRegisterMMA8451QOUT_Z_LSB			= 0x06,
 
-	kWarpSensorOutputRegisterMAG3110OUT_X_MSB			= 0x01,
-	kWarpSensorOutputRegisterMAG3110OUT_X_LSB			= 0x02,
-	kWarpSensorOutputRegisterMAG3110OUT_Y_MSB			= 0x03,
-	kWarpSensorOutputRegisterMAG3110OUT_Y_LSB			= 0x04,
-	kWarpSensorOutputRegisterMAG3110OUT_Z_MSB			= 0x05,
-	kWarpSensorOutputRegisterMAG3110OUT_Z_LSB			= 0x06,
-	kWarpSensorOutputRegisterMAG3110DIE_TEMP			= 0x0F,
+	kWarpSensorOutputRegisterMAG3110OUT_X_MSB				= 0x01,
+	kWarpSensorOutputRegisterMAG3110OUT_X_LSB				= 0x02,
+	kWarpSensorOutputRegisterMAG3110OUT_Y_MSB				= 0x03,
+	kWarpSensorOutputRegisterMAG3110OUT_Y_LSB				= 0x04,
+	kWarpSensorOutputRegisterMAG3110OUT_Z_MSB				= 0x05,
+	kWarpSensorOutputRegisterMAG3110OUT_Z_LSB				= 0x06,
+	kWarpSensorOutputRegisterMAG3110DIE_TEMP				= 0x0F,
 
-	kWarpSensorOutputRegisterHDC1000Temperature		= 0x00,
-	kWarpSensorOutputRegisterHDC1000Humidity			= 0x01,
+	kWarpSensorOutputRegisterHDC1000Temperature			= 0x00,
+	kWarpSensorOutputRegisterHDC1000Humidity				= 0x01,
 
 	kWarpSensorOutputRegisterAMG8834TTHL				= 0x0E,
 	kWarpSensorOutputRegisterAMG8834TTHH				= 0x0F,
@@ -258,12 +258,12 @@ typedef enum
 	kWarpSensorOutputRegisterADXL362FILTER_CTL			= 0x2C,
 	kWarpSensorOutputRegisterADXL362POWER_CTL				= 0x2D,
 
-	kWarpSensorOutputRegisterINA219Configuration			=0x00,
-	kWarpSensorOutputRegisterINA219Shunt				=0x01,
-	kWarpSensorOutputRegisterINA219Bus					=0x02,
-	kWarpSensorOutputRegisterINA219Power				=0x03,
-	kWarpSensorOutputRegisterINA219Current				=0x04,
-	kWarpSensorOutputRegisterINA219Calibration			=0x05,
+	kWarpSensorOutputRegisterINA219Configuration			= 0x00,
+	kWarpSensorOutputRegisterINA219Shunt				= 0x01,
+	kWarpSensorOutputRegisterINA219Bus					= 0x02,
+	kWarpSensorOutputRegisterINA219Power				= 0x03,
+	kWarpSensorOutputRegisterINA219Current				= 0x04,
+	kWarpSensorOutputRegisterINA219Calibration			= 0x05,
 
 
 } WarpSensorOutputRegister;
